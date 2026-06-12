@@ -19,7 +19,7 @@ const SERIES = [
 ];
 
 async function fetchSeries(id) {
-  const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${id}&api_key=${FRED_KEY}&sort_order=desc&limit=5&file_type=json`;
+  const url = `/api/fred?series_id=${id}`;
   const r = await fetch(url);
   const d = await r.json();
   const obs = d.observations?.filter(o => o.value !== '.' && o.value !== '');
