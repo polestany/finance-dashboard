@@ -2,8 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import './FixedIncome.css';
 
-const FRED_KEY = process.env.REACT_APP_FRED_KEY;
-
 const SERIES = [
   { id: 'DGS1MO', label: '1M' },
   { id: 'DGS3MO', label: '3M' },
