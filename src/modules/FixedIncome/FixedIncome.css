@@ -1,0 +1,159 @@
+.module {
+  max-width: 900px;
+}
+
+.module-header {
+  margin-bottom: 2rem;
+}
+
+.module-title {
+  font-size: 22px;
+  font-weight: 500;
+  color: #1a1a1a;
+  letter-spacing: -0.3px;
+}
+
+.module-subtitle {
+  font-size: 13px;
+  color: #aaa;
+  margin-top: 4px;
+}
+
+/* Metrics */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: #ffffff;
+  border: 1px solid #ebebeb;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+.metric-label {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 6px;
+}
+
+.metric-value {
+  font-size: 22px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.metric-value.neg {
+  color: #c0392b;
+}
+
+.metric-sub {
+  font-size: 11px;
+  color: #ccc;
+  margin-top: 4px;
+}
+
+/* Sections */
+.section {
+  margin-bottom: 2rem;
+}
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+/* Chart */
+.chart-container {
+  background: #ffffff;
+  border: 1px solid #ebebeb;
+  border-radius: 8px;
+  padding: 1.25rem 1rem 1rem;
+}
+
+.chart-tooltip {
+  background: #1a1a1a;
+  border-radius: 6px;
+  padding: 8px 12px;
+}
+
+.tooltip-label {
+  font-size: 11px;
+  color: #aaa;
+}
+
+.tooltip-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+/* Spreads */
+.spreads-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.spread-card {
+  background: #ffffff;
+  border: 1px solid #ebebeb;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+}
+
+.spread-name {
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 6px;
+}
+
+.spread-value {
+  font-size: 20px;
+  font-weight: 500;
+  color: #1a1a1a;
+}
+
+.spread-value.neg {
+  color: #c0392b;
+}
+
+.spread-value.pos {
+  color: #1a1a1a;
+}
+
+.spread-desc {
+  font-size: 12px;
+  color: #bbb;
+  margin-top: 4px;
+}
+
+.signal-badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-top: 8px;
+}
+
+.signal-badge.warn {
+  background: #fdf0ee;
+  color: #c0392b;
+}
+
+.signal-badge.ok {
+  background: #edf7f0;
+  color: #27ae60;
+}
+
+.signal-badge.neutral {
+  background: #f5f5f5;
+  color: #aaa;
+}
