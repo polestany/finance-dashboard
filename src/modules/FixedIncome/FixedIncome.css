@@ -157,3 +157,52 @@
   background: #f5f5f5;
   color: #aaa;
 }
+
+/* Toggle */
+.module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.toggle-group {
+  display: flex;
+  background: #f5f5f5;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+}
+
+.toggle-btn {
+  padding: 6px 20px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #888;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.toggle-btn.active {
+  background: #ffffff;
+  color: #1a1a1a;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.toggle-btn:hover:not(.active) {
+  color: #555;
+}
+
+/* Policy note */
+.policy-note {
+  background: #ffffff;
+  border: 1px solid #ebebeb;
+  border-radius: 8px;
+  padding: 1.25rem;
+  font-size: 13px;
+  color: #555;
+  line-height: 1.7;
+}
