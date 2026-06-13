@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import Spain from './countries/Spain';
 import './FixedIncome.css';
 
 const US_SERIES = [
@@ -11,13 +12,6 @@ const US_SERIES = [
   { id: 'DGS30', label: '30Y' },
 ];
 
-const EU_SERIES = [
-  { id: 'IRLTLT01DEM156N', label: 'Germany 10Y' },
-  { id: 'IRLTLT01ITM156N', label: 'Italy 10Y' },
-  { id: 'IRLTLT01ESM156N', label: 'Spain 10Y' },
-  { id: 'ECBDFR', label: 'ECB rate' },
-];
-
 const US_FALLBACK = [
   { label: '1M', value: 5.32 }, { label: '3M', value: 5.28 },
   { label: '6M', value: 5.15 }, { label: '1Y', value: 4.97 },
@@ -27,11 +21,7 @@ const US_FALLBACK = [
   { label: '30Y', value: 4.82 },
 ];
 
-const EU_FALLBACK = {
-  germany: 2.52, italy: 3.65, spain: 3.18, ecb: 2.50
-};
-
-async function fetchSeries(id) {
+async function fetchFRED(id) {
   const url = `/api/fred?series_id=${id}`;
   const r = await fetch(url);
   const d = await r.json();
@@ -40,25 +30,14 @@ async function fetchSeries(id) {
 }
 
 function SpreadCard({ name, bps, description, signal, signalText }) {
-  const isNeg = bps < 0;
   return (
     <div className="spread-card">
       <div className="spread-name">{name}</div>
-      <div className={`spread-value ${isNeg ? 'neg' : 'pos'}`}>
+      <div className={`spread-value ${bps < 0 ? 'neg' : 'pos'}`}>
         {bps >= 0 ? '+' : ''}{bps} bps
       </div>
       <div className="spread-desc">{description}</div>
       <span className={`signal-badge ${signal}`}>{signalText}</span>
-    </div>
-  );
-}
-
-function MetricCard({ label, value, sub, negative }) {
-  return (
-    <div className="metric-card">
-      <div className="metric-label">{label}</div>
-      <div className={`metric-value ${negative ? 'neg' : ''}`}>{value}</div>
-      <div className="metric-sub">{sub}</div>
     </div>
   );
 }
@@ -72,7 +51,7 @@ function USView() {
   useEffect(() => {
     async function load() {
       try {
-        const results = await Promise.all(US_SERIES.map(s => fetchSeries(s.id)));
+        const results = await Promise.all(US_SERIES.map(s => fetchFRED(s.id)));
         const data = US_SERIES.map((s, i) => results[i] ? { label: s.label, value: results[i].value } : null).filter(Boolean);
         if (data.length === 0) throw new Error('No data');
         setCurveData(data);
@@ -113,10 +92,28 @@ function USView() {
         {loading ? 'Loading...' : usingFallback ? 'Sample data — FRED unavailable' : `US Treasury rates · ${date}`}
       </p>
       <div className="metrics-grid">
-        <MetricCard label="2Y yield" value={v2y ? v2y.toFixed(2) + '%' : '—'} sub="Short end" />
-        <MetricCard label="10Y yield" value={v10y ? v10y.toFixed(2) + '%' : '—'} sub="Benchmark" />
-        <MetricCard label="30Y yield" value={v30y ? v30y.toFixed(2) + '%' : '—'} sub="Long end" />
-        <MetricCard label="2s10s spread" value={spread2s10s !== null ? (spread2s10s >= 0 ? '+' : '') + spread2s10s + ' bps' : '—'} sub="Inversion signal" negative={spread2s10s < 0} />
+        <div className="metric-card">
+          <div className="metric-label">2Y yield</div>
+          <div className="metric-value">{v2y ? v2y.toFixed(2) + '%' : '—'}</div>
+          <div className="metric-sub">Short end</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-label">10Y yield</div>
+          <div className="metric-value">{v10y ? v10y.toFixed(2) + '%' : '—'}</div>
+          <div className="metric-sub">Benchmark</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-label">30Y yield</div>
+          <div className="metric-value">{v30y ? v30y.toFixed(2) + '%' : '—'}</div>
+          <div className="metric-sub">Long end</div>
+        </div>
+        <div className="metric-card">
+          <div className="metric-label">2s10s spread</div>
+          <div className={`metric-value ${spread2s10s < 0 ? 'neg' : ''}`}>
+            {spread2s10s !== null ? (spread2s10s >= 0 ? '+' : '') + spread2s10s + ' bps' : '—'}
+          </div>
+          <div className="metric-sub">Inversion signal</div>
+        </div>
       </div>
       <div className="section">
         <div className="section-label">Yield curve</div>
@@ -146,105 +143,13 @@ function USView() {
   );
 }
 
-function EUView() {
-  const [data, setData] = useState(null);
-  const [date, setDate] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [usingFallback, setUsingFallback] = useState(false);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        const results = await Promise.all(EU_SERIES.map(s => fetchSeries(s.id)));
-        const [germany, italy, spain, ecb] = results;
-        if (!germany) throw new Error('No data');
-        setData({
-          germany: germany.value,
-          italy: italy?.value,
-          spain: spain?.value,
-          ecb: ecb?.value,
-        });
-        setDate(germany.date);
-      } catch {
-        setData(EU_FALLBACK);
-        setUsingFallback(true);
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
-
-  if (loading) return <p className="module-subtitle">Loading...</p>;
-
-  const btpBund = data.italy && data.germany ? Math.round((data.italy - data.germany) * 100) : null;
-  const bonosBund = data.spain && data.germany ? Math.round((data.spain - data.germany) * 100) : null;
-
-  const spreadSignal = (bps) => {
-    if (bps === null) return { signal: 'neutral', text: '—' };
-    if (bps > 200) return { signal: 'warn', text: 'Elevated stress ⚠' };
-    if (bps > 100) return { signal: 'neutral', text: 'Watch zone' };
-    return { signal: 'ok', text: 'Contained' };
-  };
-
-  return (
-    <>
-      <p className="module-subtitle">
-        {usingFallback ? 'Sample data — FRED unavailable' : `Eurozone rates · ${date} · Monthly OECD data via FRED`}
-      </p>
-      <div className="metrics-grid">
-        <MetricCard label="Germany 10Y" value={data.germany ? data.germany.toFixed(2) + '%' : '—'} sub="Bund benchmark" />
-        <MetricCard label="Italy 10Y" value={data.italy ? data.italy.toFixed(2) + '%' : '—'} sub="BTP" />
-        <MetricCard label="Spain 10Y" value={data.spain ? data.spain.toFixed(2) + '%' : '—'} sub="Bonos" />
-        <MetricCard label="ECB deposit rate" value={data.ecb ? data.ecb.toFixed(2) + '%' : '—'} sub="Policy anchor" />
-      </div>
-      <div className="section">
-        <div className="section-label">Sovereign spreads vs Bund</div>
-        <div className="spreads-grid">
-          {btpBund !== null && (
-            <SpreadCard
-              name="BTP–Bund spread"
-              bps={btpBund}
-              description="Italy vs Germany · eurozone stress gauge"
-              signal={spreadSignal(btpBund).signal}
-              signalText={spreadSignal(btpBund).text}
-            />
-          )}
-          {bonosBund !== null && (
-            <SpreadCard
-              name="Bonos–Bund spread"
-              bps={bonosBund}
-              description="Spain vs Germany · peripheral risk"
-              signal={spreadSignal(bonosBund).signal}
-              signalText={spreadSignal(bonosBund).text}
-            />
-          )}
-          {btpBund !== null && bonosBund !== null && (
-            <SpreadCard
-              name="BTP–Bonos spread"
-              bps={btpBund - bonosBund}
-              description="Italy vs Spain · relative peripheral risk"
-              signal="neutral"
-              signalText="Comparative"
-            />
-          )}
-        </div>
-      </div>
-      <div className="section">
-        <div className="section-label">Policy context</div>
-        <div className="policy-note">
-          The ECB deposit rate ({data.ecb ? data.ecb.toFixed(2) + '%' : '—'}) is the floor for eurozone overnight rates.
-          Germany's 10Y Bund ({data.germany ? data.germany.toFixed(2) + '%' : '—'}) trades above it,
-          implying a term premium of ~{data.ecb && data.germany ? Math.round((data.germany - data.ecb) * 100) : '—'} bps.
-          Peripheral spreads reflect country-specific fiscal risk on top of this baseline.
-        </div>
-      </div>
-    </>
-  );
-}
+const COUNTRIES = [
+  { id: 'US', label: '🇺🇸 United States' },
+  { id: 'ES', label: '🇪🇸 Spain' },
+];
 
 export default function FixedIncome() {
-  const [region, setRegion] = useState('US');
+  const [country, setCountry] = useState('ES');
 
   return (
     <div className="module">
@@ -253,11 +158,18 @@ export default function FixedIncome() {
           <h1 className="module-title">Fixed Income</h1>
         </div>
         <div className="toggle-group">
-          <button className={`toggle-btn ${region === 'US' ? 'active' : ''}`} onClick={() => setRegion('US')}>US</button>
-          <button className={`toggle-btn ${region === 'EU' ? 'active' : ''}`} onClick={() => setRegion('EU')}>Europe</button>
+          {COUNTRIES.map(c => (
+            <button
+              key={c.id}
+              className={`toggle-btn ${country === c.id ? 'active' : ''}`}
+              onClick={() => setCountry(c.id)}
+            >
+              {c.label}
+            </button>
+          ))}
         </div>
       </div>
-      {region === 'US' ? <USView /> : <EUView />}
+      {country === 'US' ? <USView /> : <Spain />}
     </div>
   );
 }
