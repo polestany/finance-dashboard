@@ -126,7 +126,7 @@ export default function Spain() {
           <div className="metric-sub">Long end</div>
         </div>
         <div className="metric-card">
-          <div className="metric-label">Bonos–Bund spread</div>
+          <div className="metric-label">Risk Premium</div>
           <div className="metric-value" style={{ color: spreadColor }}>
             {spreadBps !== null ? `+${spreadBps} bps` : '—'}
           </div>
