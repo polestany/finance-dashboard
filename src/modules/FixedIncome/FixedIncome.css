@@ -3,7 +3,7 @@
 }
 
 .module-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .module-title {
@@ -16,7 +16,9 @@
 .module-subtitle {
   font-size: 13px;
   color: #aaa;
-  margin-top: 4px;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  line-height: 1.4;
 }
 
 /* Metrics */
@@ -163,7 +165,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .toggle-group {
