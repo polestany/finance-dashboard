@@ -42,11 +42,68 @@ function SpreadCard({ name, bps, description, signal, signalText }) {
   );
 }
 
+function Tooltip({ text, children }) {
+  const [show, setShow] = useState(false);
+  return (
+    <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+    >
+      {children}
+      {show && (
+        <div style={{
+          position: 'absolute', bottom: '105%', left: 0, zIndex: 100,
+          background: '#1a1a1a', color: '#fff', borderRadius: 8,
+          padding: '10px 14px', fontSize: 12, lineHeight: 1.6,
+          width: 220, boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+          pointerEvents: 'none'
+        }}>
+          {text}
+          <div style={{
+            position: 'absolute', top: '100%', left: 20,
+            borderWidth: 6, borderStyle: 'solid',
+            borderColor: '#1a1a1a transparent transparent transparent'
+          }} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+const METRIC_EXPLANATIONS = {
+  '2Y yield': 'The yield on 2-year US Treasury bills. Closely tracks Federal Reserve rate expectations — it moves when markets anticipate rate hikes or cuts.',
+  '10Y yield': 'The benchmark US Treasury yield. Used globally as the risk-free rate in CAPM and DCF models. Reflects long-term growth and inflation expectations.',
+  '30Y yield': 'The long-end of the curve. Driven by long-term inflation expectations and supply/demand for duration. Less sensitive to short-term Fed policy.',
+  '2s10s spread': 'The difference between 10Y and 2Y yields. When negative (inverted), it has historically preceded recessions. Based on the expectations hypothesis of the yield curve.',
+  '10Y real yield': 'Nominal 10Y yield minus expected inflation (from TIPS). This is what investors actually earn in purchasing power terms — the true cost of capital. Formula: r_real = r_nominal − π^e (Fisher equation).',
+  'Breakeven inflation': 'The inflation rate at which a TIPS investor and a nominal Treasury investor earn the same return. Computed as: Nominal 10Y yield − 10Y TIPS yield. Represents the bond market\'s implied inflation forecast.',
+  '2s10s': 'Difference between 10Y and 2Y yields. A negative value signals curve inversion — historically a reliable recession indicator.',
+  '3m10y': 'The Fed\'s preferred inversion metric. More sensitive to near-term rate expectations than 2s10s.',
+  '5s30s': 'Measures the steepness of the long end. A flattening here signals demand for long-duration assets or lower long-term growth expectations.',
+};
+
+function MetricCard({ label, value, sub, negative, explanation }) {
+  return (
+    <Tooltip text={explanation || 'No description available.'}>
+      <div className="metric-card" style={{ cursor: 'default', width: '100%' }}>
+        <div className="metric-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          {label}
+          <span style={{ fontSize: 10, color: '#ccc', border: '1px solid #e0e0e0', borderRadius: '50%', width: 14, height: 14, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>?</span>
+        </div>
+        <div className={`metric-value ${negative ? 'neg' : ''}`}>{value}</div>
+        <div className="metric-sub">{sub}</div>
+      </div>
+    </Tooltip>
+  );
+}
+
 function USView() {
   const [curveData, setCurveData] = useState([]);
   const [date, setDate] = useState('');
   const [loading, setLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [realYield, setRealYield] = useState(null);
+  const [breakeven, setBreakeven] = useState(null);
 
   useEffect(() => {
     async function load() {
@@ -57,8 +114,18 @@ function USView() {
         setCurveData(data);
         const d = results.find(r => r);
         if (d) setDate(d.date);
+
+        // Fetch real yield and breakeven
+        const [realResult, breakevenResult] = await Promise.all([
+          fetchFRED('DFII10'),
+          fetchFRED('T10YIE'),
+        ]);
+        if (realResult) setRealYield(realResult.value);
+        if (breakevenResult) setBreakeven(breakevenResult.value);
       } catch {
         setCurveData(US_FALLBACK);
+        setRealYield(2.10);
+        setBreakeven(2.48);
         setUsingFallback(true);
       } finally {
         setLoading(false);
@@ -91,30 +158,45 @@ function USView() {
       <p className="module-subtitle">
         {loading ? 'Loading...' : usingFallback ? 'Sample data — FRED unavailable' : `US Treasury rates · ${date}`}
       </p>
+
+      {/* Main metrics */}
       <div className="metrics-grid">
-        <div className="metric-card">
-          <div className="metric-label">2Y yield</div>
-          <div className="metric-value">{v2y ? v2y.toFixed(2) + '%' : '—'}</div>
-          <div className="metric-sub">Short end</div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-label">10Y yield</div>
-          <div className="metric-value">{v10y ? v10y.toFixed(2) + '%' : '—'}</div>
-          <div className="metric-sub">Benchmark</div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-label">30Y yield</div>
-          <div className="metric-value">{v30y ? v30y.toFixed(2) + '%' : '—'}</div>
-          <div className="metric-sub">Long end</div>
-        </div>
-        <div className="metric-card">
-          <div className="metric-label">2s10s spread</div>
-          <div className={`metric-value ${spread2s10s < 0 ? 'neg' : ''}`}>
-            {spread2s10s !== null ? (spread2s10s >= 0 ? '+' : '') + spread2s10s + ' bps' : '—'}
-          </div>
-          <div className="metric-sub">Inversion signal</div>
-        </div>
+        <MetricCard label="2Y yield" value={v2y ? v2y.toFixed(2) + '%' : '—'} sub="Short end" explanation={METRIC_EXPLANATIONS['2Y yield']} />
+        <MetricCard label="10Y yield" value={v10y ? v10y.toFixed(2) + '%' : '—'} sub="Benchmark" explanation={METRIC_EXPLANATIONS['10Y yield']} />
+        <MetricCard label="30Y yield" value={v30y ? v30y.toFixed(2) + '%' : '—'} sub="Long end" explanation={METRIC_EXPLANATIONS['30Y yield']} />
+        <MetricCard label="2s10s spread" value={spread2s10s !== null ? (spread2s10s >= 0 ? '+' : '') + spread2s10s + ' bps' : '—'} sub="Inversion signal" negative={spread2s10s < 0} explanation={METRIC_EXPLANATIONS['2s10s spread']} />
       </div>
+
+      {/* Real yield & breakeven row */}
+      <div className="metrics-grid" style={{ marginBottom: '2rem' }}>
+        <MetricCard
+          label="10Y real yield"
+          value={realYield !== null ? (realYield >= 0 ? '+' : '') + realYield.toFixed(2) + '%' : '—'}
+          sub="TIPS-derived · Fisher equation"
+          negative={realYield < 0}
+          explanation={METRIC_EXPLANATIONS['10Y real yield']}
+        />
+        <MetricCard
+          label="Breakeven inflation"
+          value={breakeven !== null ? breakeven.toFixed(2) + '%' : '—'}
+          sub="Market implied 10Y inflation"
+          explanation={METRIC_EXPLANATIONS['Breakeven inflation']}
+        />
+        <MetricCard
+          label="Inflation premium"
+          value={v10y && realYield !== null ? (v10y - realYield).toFixed(2) + '%' : '—'}
+          sub="Nominal minus real"
+          explanation="The portion of the nominal yield that compensates investors for expected inflation. Equals the breakeven inflation rate when markets are efficient."
+        />
+        <MetricCard
+          label="Real vs nominal gap"
+          value={v10y && realYield !== null ? Math.round((v10y - realYield) * 100) + ' bps' : '—'}
+          sub="Inflation compensation"
+          explanation="How many basis points of the 10Y yield are pure inflation compensation vs real return. A high gap means inflation expectations are elevated."
+        />
+      </div>
+
+      {/* Chart */}
       <div className="section">
         <div className="section-label">Yield curve</div>
         <div className="chart-container">
@@ -131,6 +213,8 @@ function USView() {
           )}
         </div>
       </div>
+
+      {/* Spreads */}
       <div className="section">
         <div className="section-label">Key spreads & signals</div>
         <div className="spreads-grid">
