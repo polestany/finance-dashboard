@@ -11,8 +11,8 @@
       "use": "@vercel/node"
     }
   ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/fred.js" },
-    { "src": "/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/fred.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
