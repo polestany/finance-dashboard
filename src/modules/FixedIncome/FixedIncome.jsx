@@ -228,8 +228,8 @@ function USView() {
 }
 
 const COUNTRIES = [
-  { id: 'US', label: '🇺🇸 United States' },
-  { id: 'ES', label: '🇪🇸 Spain' },
+  { id: 'US', label: 'United States' },
+  { id: 'ES', label: 'Spain' },
 ];
 
 export default function FixedIncome() {
