@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as ChartTooltip } from 'recharts';
 import Spain from './countries/Spain';
 import './FixedIncome.css';
 
@@ -206,7 +206,7 @@ function USView() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#888' }} />
                 <YAxis domain={['auto', 'auto']} tick={{ fontSize: 12, fill: '#888' }} tickFormatter={v => v.toFixed(1) + '%'} />
-                <RechartsTooltip content={customTooltip} />
+                <ChartTooltip content={customTooltip} />
                 <Line type="monotone" dataKey="value" stroke="#1a1a1a" strokeWidth={2} dot={{ r: 3, fill: '#1a1a1a' }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
