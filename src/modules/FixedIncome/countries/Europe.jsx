@@ -5,13 +5,13 @@ import {
 } from 'recharts';
 
 const COLORS = {
-  DE: '#2c3e50', FR: '#2980b9', IT: '#27ae60',
+  DE: '#1a1a1a', FR: '#2980b9', IT: '#27ae60',
   ES: '#c0392b', PT: '#8e44ad', GR: '#e67e22',
 };
 
 const LABELS = {
-  DE: '🇩🇪 Germany', FR: '🇫🇷 France', IT: '🇮🇹 Italy',
-  ES: '🇪🇸 Spain', PT: '🇵🇹 Portugal', GR: '🇬🇷 Greece',
+  DE: 'Germany', FR: 'France', IT: 'Italy',
+  ES: 'Spain', PT: 'Portugal', GR: 'Greece',
 };
 
 const FRED_10Y = {
@@ -124,20 +124,28 @@ export default function Europe() {
           : `ECB AAA curve (daily) · Country 10Y via FRED/OECD (monthly) · ${date}`}
       </p>
 
-      {/* Toggles */}
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: '1.5rem' }}>
+      {/* Country toggles — minimal text style */}
+      <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: '1.5rem', borderBottom: '1px solid #ebebeb', paddingBottom: '1rem' }}>
         {Object.keys(LABELS).map(id => (
           <button
             key={id}
             onClick={() => toggle(id)}
             style={{
-              padding: '5px 14px', borderRadius: 20, fontSize: 12, cursor: 'pointer',
-              border: `1.5px solid ${COLORS[id]}`,
-              background: active[id] ? COLORS[id] : 'transparent',
-              color: active[id] ? '#fff' : COLORS[id],
-              fontWeight: 500, transition: 'all 0.15s',
+              background: 'none', border: 'none', padding: 0,
+              fontSize: 13, cursor: 'pointer',
+              color: active[id] ? COLORS[id] : '#ccc',
+              fontWeight: active[id] ? 500 : 400,
+              fontFamily: 'inherit',
+              transition: 'color 0.15s',
+              display: 'flex', alignItems: 'center', gap: 6,
             }}
           >
+            <span style={{
+              width: 6, height: 6, borderRadius: '50%',
+              background: active[id] ? COLORS[id] : '#ddd',
+              display: 'inline-block', flexShrink: 0,
+              transition: 'background 0.15s',
+            }} />
             {LABELS[id]}
           </button>
         ))}
@@ -168,7 +176,7 @@ export default function Europe() {
                     <ReferenceDot
                       key={country}
                       x="10Y" y={tenYear[country]}
-                      r={7} fill={COLORS[country]}
+                      r={6} fill={COLORS[country]}
                       stroke="#fff" strokeWidth={2}
                       label={{
                         value: `${country} ${tenYear[country].toFixed(2)}%`,
@@ -198,19 +206,18 @@ export default function Europe() {
             const spreadVsECB = val != null && ecb10Y != null
               ? Math.round((val - ecb10Y) * 100) : null;
             const info = COUNTRY_INFO[id];
-            const ratingColor = info.rating.startsWith('A') ? '#27ae60' : info.rating.startsWith('B') ? '#e67e22' : '#c0392b';
+            const ratingColor = info.rating.startsWith('AA') ? '#27ae60' : info.rating.startsWith('A') ? '#27ae60' : '#e67e22';
 
             return (
               <div
                 key={id}
                 className="spread-card"
-                style={{
-                  opacity: active[id] ? 1 : 0.3,
-                  borderLeft: `3px solid ${COLORS[id]}`,
-                  transition: 'opacity 0.2s',
-                }}
+                style={{ opacity: active[id] ? 1 : 0.3, transition: 'opacity 0.2s' }}
               >
-                <div className="spread-name">{LABELS[id]}</div>
+                <div className="spread-name" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS[id], display: 'inline-block' }} />
+                  {LABELS[id]}
+                </div>
                 <div className="spread-value" style={{ color: COLORS[id] }}>
                   {val ? val.toFixed(2) + '%' : '—'}
                   <span style={{ fontSize: 11, color: '#bbb', fontWeight: 400, marginLeft: 6 }}>10Y</span>
@@ -243,7 +250,7 @@ export default function Europe() {
                   </div>
                   <div>
                     <div style={{ fontSize: 10, color: '#ccc' }}>Source</div>
-                    <div style={{ fontSize: 11, color: '#aaa' }}>{id === 'ES' ? 'BDE daily' : 'FRED monthly'}</div>
+                    <div style={{ fontSize: 11, color: '#aaa' }}>FRED · monthly</div>
                   </div>
                 </div>
               </div>
