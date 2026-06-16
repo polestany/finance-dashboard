@@ -1,18 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": { "distDir": "build" }
-    },
-    {
-      "src": "api/fred.js",
-      "use": "@vercel/node"
-    }
-  ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/fred.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
