@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as ChartTooltip } from 'recharts';
-import Spain from './countries/Spain';
+import Europe from './countries/Europe';
 import './FixedIncome.css';
 
 const US_SERIES = [
@@ -22,7 +22,7 @@ const US_FALLBACK = [
 ];
 
 async function fetchFRED(id) {
-  const url = `/api/fred?series_id=${id}`;
+  const url = `/api/data?series_id=${id}`;
   const r = await fetch(url);
   const d = await r.json();
   const obs = d.observations?.filter(o => o.value !== '.' && o.value !== '');
@@ -229,7 +229,7 @@ function USView() {
 
 const COUNTRIES = [
   { id: 'US', label: 'United States' },
-  { id: 'ES', label: 'Spain' },
+  { id: 'EU', label: 'Europe' },
 ];
 
 export default function FixedIncome() {
@@ -253,7 +253,7 @@ export default function FixedIncome() {
           ))}
         </div>
       </div>
-      {country === 'US' ? <USView /> : <Spain />}
+      {country === 'US' ? <USView /> : <Europe />}
     </div>
   );
 }

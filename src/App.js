@@ -1,9 +1,15 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom';
+import React, { useState } from 'react';
 import FixedIncome from './modules/FixedIncome/FixedIncome';
 import './App.css';
 
-function Sidebar() {
+const NAV_ITEMS = [
+  { id: 'fixed-income', label: 'Fixed Income' },
+  { id: 'equities', label: 'Equities', badge: 'soon' },
+  { id: 'macro', label: 'Macro', badge: 'soon' },
+  { id: 'prediction-markets', label: 'Prediction Markets', badge: 'soon' },
+];
+
+function Sidebar({ activeView, onSelectView }) {
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
@@ -12,22 +18,38 @@ function Sidebar() {
       </div>
       <nav className="sidebar-nav">
         <div className="nav-section-label">Markets</div>
-        <NavLink to="/" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+        <button
+          type="button"
+          className={`nav-item ${activeView === 'fixed-income' ? 'active' : ''}`}
+          onClick={() => onSelectView('fixed-income')}
+        >
           Fixed Income
-        </NavLink>
-        <NavLink to="/equities" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+        </button>
+        <button
+          type="button"
+          className={`nav-item ${activeView === 'equities' ? 'active' : ''}`}
+          onClick={() => onSelectView('equities')}
+        >
           Equities
           <span className="nav-badge">soon</span>
-        </NavLink>
+        </button>
         <div className="nav-section-label">Analysis</div>
-        <NavLink to="/macro" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+        <button
+          type="button"
+          className={`nav-item ${activeView === 'macro' ? 'active' : ''}`}
+          onClick={() => onSelectView('macro')}
+        >
           Macro
           <span className="nav-badge">soon</span>
-        </NavLink>
-        <NavLink to="/prediction-markets" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+        </button>
+        <button
+          type="button"
+          className={`nav-item ${activeView === 'prediction-markets' ? 'active' : ''}`}
+          onClick={() => onSelectView('prediction-markets')}
+        >
           Prediction Markets
           <span className="nav-badge">soon</span>
-        </NavLink>
+        </button>
       </nav>
       <div className="sidebar-footer">
         <span>FRED · World Bank · Kalshi</span>
@@ -37,20 +59,29 @@ function Sidebar() {
 }
 
 function App() {
-  return (
-    <BrowserRouter>
-      <div className="app">
-        <Sidebar />
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<FixedIncome />} />
-            <Route path="/equities" element={<div className="coming-soon">Equities module coming soon</div>} />
-            <Route path="/macro" element={<div className="coming-soon">Macro module coming soon</div>} />
-            <Route path="/prediction-markets" element={<div className="coming-soon">Prediction Markets module coming soon</div>} />
-          </Routes>
-        </main>
+  const [activeView, setActiveView] = useState('fixed-income');
+
+  const renderMainContent = () => {
+    if (activeView === 'fixed-income') {
+      return <FixedIncome />;
+    }
+
+    const item = NAV_ITEMS.find(navItem => navItem.id === activeView);
+
+    return (
+      <div className="coming-soon">
+        {item?.label} module coming soon
       </div>
-    </BrowserRouter>
+    );
+  };
+
+  return (
+    <div className="app">
+      <Sidebar activeView={activeView} onSelectView={setActiveView} />
+      <main className="main-content">
+        {renderMainContent()}
+      </main>
+    </div>
   );
 }
 
