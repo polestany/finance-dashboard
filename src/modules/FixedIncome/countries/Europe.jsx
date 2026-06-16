@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ComposedChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip as ChartTooltip, ResponsiveContainer, Scatter
+  Tooltip as ChartTooltip, ResponsiveContainer
 } from 'recharts';
 
 const COLORS = {
