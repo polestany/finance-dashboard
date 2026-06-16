@@ -14,16 +14,16 @@ const COUNTRY_LABELS = {
   ES: 'Spain', PT: 'Portugal', GR: 'Greece',
 };
 
-const ECB_MATURITIES = ['3M','6M','1Y','2Y','3Y','5Y','7Y','10Y','15Y','20Y','30Y'];
-
-const FRED_10Y = {
-  DE: 'IRLTLT01DEM156N',
-  FR: 'IRLTLT01FRM156N',
-  IT: 'IRLTLT01ITM156N',
-  ES: 'IRLTLT01ESM156N',
-  PT: 'IRLTLT01PTM156N',
-  GR: 'IRLTLT01GRM156N',
+const COUNTRY_SERIES = {
+  DE: { source: 'fred', id: 'IRLTLT01DEM156N' },
+  FR: { source: 'fred', id: 'IRLTLT01FRM156N' },
+  IT: { source: 'fred', id: 'IRLTLT01ITM156N' },
+  ES: { source: 'bde', id: 'DPUG0B1F0ZP' },
+  PT: { source: 'fred', id: 'IRLTLT01PTM156N' },
+  GR: { source: 'fred', id: 'IRLTLT01GRM156N' },
 };
+
+const ECB_MATURITIES = ['3M','6M','1Y','2Y','3Y','5Y','7Y','10Y','15Y','20Y','30Y'];
 
 const COUNTRY_INFO = {
   DE: { rating: 'AAA', gdp: '4.1T', debt: '63% GDP', outlook: 'Stable' },
@@ -51,6 +51,15 @@ async function fetchFRED10Y(id) {
   const d = await r.json();
   const obs = d.observations?.filter(o => o.value !== '.' && o.value !== '');
   return obs?.length > 0 ? { value: parseFloat(obs[0].value), date: obs[0].date } : null;
+}
+
+async function fetchBDE10Y(id) {
+  const r = await fetch(`/api/data?source=bde&series_id=${id}`);
+  const d = await r.json();
+  const record = Array.isArray(d) ? d.find(item => item.serie === id) : null;
+  return record?.valor !== undefined && record?.valor !== null
+    ? { value: parseFloat(record.valor), date: record.fechaValor?.split('T')[0] }
+    : null;
 }
 
 const FALLBACK_CURVE = [
@@ -94,8 +103,9 @@ export default function Europe() {
       try {
         const [curve, ...fredResults] = await Promise.all([
           fetchECBCurve(),
-          ...Object.entries(FRED_10Y).map(([country, id]) =>
-            fetchFRED10Y(id).then(r => ({ country, value: r?.value ?? null, date: r?.date }))
+          ...Object.entries(COUNTRY_SERIES).map(([country, series]) =>
+            (series.source === 'bde' ? fetchBDE10Y(series.id) : fetchFRED10Y(series.id))
+              .then(r => ({ country, value: r?.value ?? null, date: r?.date }))
           )
         ]);
 
@@ -106,8 +116,11 @@ export default function Europe() {
         fredResults.forEach(r => { t10y[r.country] = r.value; });
         setTenYear(t10y);
 
-        const latestDate = fredResults.find(r => r.date)?.date;
-        if (latestDate) setDate(latestDate);
+        const latestDate = fredResults
+          .map(r => r.date)
+          .filter(Boolean)
+          .sort((a, b) => new Date(b) - new Date(a))[0];
+        if (latestDate) setDate(latestDate.split('T')[0]);
 
       } catch {
         setEcbCurve(FALLBACK_CURVE);
@@ -129,7 +142,7 @@ export default function Europe() {
       <p className="module-subtitle">
         {loading ? 'Loading...' : usingFallback
           ? 'Sample data — sources unavailable'
-          : `ECB AAA curve (daily) · Country 10Y: FRED/OECD (monthly) · ${date}`}
+          : `ECB AAA curve (daily) · Country 10Y: FRED/OECD (Spain via BDE) · ${date}`}
       </p>
 
       {/* Country toggles */}
@@ -178,7 +191,7 @@ export default function Europe() {
 
                 {/* 10Y dots per country */}
                 {Object.keys(COUNTRY_LABELS).map(country =>
-                  active[country] && tenYear[country] ? (
+                  active[country] && tenYear[country] != null ? (
                     <ReferenceDot
                       key={country}
                       x="10Y"
@@ -202,7 +215,7 @@ export default function Europe() {
           )}
         </div>
         <div style={{ fontSize: 11, color: '#bbb', marginTop: 8 }}>
-          Dashed line: ECB AAA composite eurozone curve (daily). Dots: individual country 10Y yields (OECD monthly via FRED). ECB curve excludes non-AAA issuers — country dots above the curve reflect credit/fiscal risk premium.
+          Dashed line: ECB AAA composite eurozone curve (daily). Dots: individual country 10Y yields (OECD monthly via FRED, Spain via BDE). ECB curve excludes non-AAA issuers — country dots above the curve reflect credit/fiscal risk premium.
         </div>
       </div>
 
@@ -212,8 +225,8 @@ export default function Europe() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
           {Object.keys(COUNTRY_LABELS).map(id => {
             const val = tenYear[id];
-            const spreadVsECB = val && ecb10Y ? Math.round((val - ecb10Y) * 100) : null;
-            const spreadVsBund = val && tenYear['DE'] && id !== 'DE'
+            const spreadVsECB = val != null && ecb10Y != null ? Math.round((val - ecb10Y) * 100) : null;
+            const spreadVsBund = val != null && tenYear['DE'] != null && id !== 'DE'
               ? Math.round((val - tenYear['DE']) * 100) : null;
             const info = COUNTRY_INFO[id];
             return (
@@ -245,7 +258,7 @@ export default function Europe() {
                       vs ECB AAA: <span style={{ fontWeight: 500 }}>+{spreadVsECB} bps</span>
                     </div>
                   )}
-                  {id === 'DE' && ecb10Y && (
+                  {id === 'DE' && ecb10Y != null && val != null && (
                     <div style={{ fontSize: 12, color: '#666' }}>
                       vs ECB AAA: <span style={{ fontWeight: 500 }}>
                         {Math.round((val - ecb10Y) * 100) > 0 ? '+' : ''}{Math.round((val - ecb10Y) * 100)} bps
@@ -274,7 +287,7 @@ export default function Europe() {
                 </div>
 
                 <span className="signal-badge neutral" style={{ marginTop: 8 }}>
-                  {id === 'ES' ? 'Daily · BDE' : 'Monthly · FRED'}
+                  {COUNTRY_SERIES[id].source === 'bde' ? 'Daily · BDE' : 'Monthly · FRED'}
                 </span>
               </div>
             );
