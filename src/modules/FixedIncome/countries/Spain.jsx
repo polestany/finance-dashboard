@@ -31,7 +31,7 @@ const CREDIT_RATINGS = [
 
 async function fetchBDE(seriesIds) {
   const ids = Array.isArray(seriesIds) ? seriesIds.join(',') : seriesIds;
-  const r = await fetch(`/api/fred?source=bde&series_id=${ids}`);
+  const r = await fetch(`/api/data?source=bde&series_id=${ids}`);
   return r.json();
 }
 
