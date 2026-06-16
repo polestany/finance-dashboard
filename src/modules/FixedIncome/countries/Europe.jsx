@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
-  Tooltip as ChartTooltip, ResponsiveContainer, ReferenceDot
+  ComposedChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip as ChartTooltip, ResponsiveContainer, Scatter
 } from 'recharts';
 
 const COLORS = {
@@ -61,12 +61,31 @@ async function fetchFRED(id) {
   return obs?.length > 0 ? { value: parseFloat(obs[0].value), date: obs[0].date } : null;
 }
 
+const CustomDot = (props) => {
+  const { cx, cy, payload, country, color } = props;
+  if (!payload || payload[country] == null) return null;
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={7} fill={color} stroke="#fff" strokeWidth={2} />
+      <text x={cx} y={cy - 12} textAnchor="middle" fontSize={11} fill={color} fontWeight={600}>
+        {country} {payload[country]?.toFixed(2)}%
+      </text>
+    </g>
+  );
+};
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload?.length) {
+    const ecbVal = payload.find(p => p.dataKey === 'value');
     return (
       <div className="chart-tooltip">
-        <div className="tooltip-label">{label} · ECB AAA</div>
-        <div className="tooltip-value">{payload[0]?.value?.toFixed(3)}%</div>
+        <div className="tooltip-label">{label}</div>
+        {ecbVal && <div className="tooltip-value">ECB AAA: {ecbVal.value?.toFixed(3)}%</div>}
+        {payload.filter(p => p.dataKey !== 'value' && p.value != null).map(p => (
+          <div key={p.dataKey} style={{ fontSize: 12, color: COLORS[p.dataKey] || '#fff', marginTop: 2 }}>
+            {LABELS[p.dataKey]}: {p.value?.toFixed(3)}%
+          </div>
+        ))}
       </div>
     );
   }
@@ -116,6 +135,20 @@ export default function Europe() {
   const toggle = (id) => setActive(prev => ({ ...prev, [id]: !prev[id] }));
   const ecb10Y = ecbCurve.find(d => d.label === '10Y')?.value;
 
+  // Inject country 10Y values into the 10Y data point
+  const chartData = ecbCurve.map(point => {
+    if (point.label === '10Y') {
+      const enriched = { ...point };
+      Object.keys(LABELS).forEach(country => {
+        if (active[country] && tenYear[country] != null) {
+          enriched[country] = tenYear[country];
+        }
+      });
+      return enriched;
+    }
+    return point;
+  });
+
   return (
     <>
       <p className="module-subtitle">
@@ -124,7 +157,7 @@ export default function Europe() {
           : `ECB AAA curve (daily) · Country 10Y via FRED/OECD (monthly) · ${date}`}
       </p>
 
-      {/* Country toggles — minimal text style */}
+      {/* Country toggles */}
       <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', marginBottom: '1.5rem', borderBottom: '1px solid #ebebeb', paddingBottom: '1rem' }}>
         {Object.keys(LABELS).map(id => (
           <button
@@ -156,8 +189,8 @@ export default function Europe() {
         <div className="section-label">ECB AAA yield curve · country 10Y benchmarks</div>
         <div className="chart-container">
           {!loading && (
-            <ResponsiveContainer width="100%" height={320}>
-              <LineChart data={ecbCurve} margin={{ top: 20, right: 50, left: 0, bottom: 0 }}>
+            <ResponsiveContainer width="100%" height={340}>
+              <ComposedChart data={chartData} margin={{ top: 24, right: 50, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#888' }} />
                 <YAxis
@@ -166,27 +199,31 @@ export default function Europe() {
                   tickFormatter={v => v.toFixed(1) + '%'}
                 />
                 <ChartTooltip content={<CustomTooltip />} />
+
+                {/* ECB AAA curve */}
                 <Line
                   type="monotone" dataKey="value"
                   stroke="#ddd" strokeWidth={2}
                   strokeDasharray="5 3" dot={false}
+                  name="ECB AAA"
                 />
+
+                {/* Country dots at 10Y */}
                 {Object.keys(LABELS).map(country =>
-                  active[country] && tenYear[country] != null ? (
-                    <ReferenceDot
+                  active[country] ? (
+                    <Line
                       key={country}
-                      x="10Y" y={tenYear[country]}
-                      r={6} fill={COLORS[country]}
-                      stroke="#fff" strokeWidth={2}
-                      label={{
-                        value: `${country} ${tenYear[country].toFixed(2)}%`,
-                        position: tenYear[country] > (ecb10Y || 3) ? 'top' : 'bottom',
-                        fontSize: 11, fill: COLORS[country], fontWeight: 600,
-                      }}
+                      dataKey={country}
+                      stroke={COLORS[country]}
+                      dot={(props) => <CustomDot {...props} country={country} color={COLORS[country]} />}
+                      activeDot={false}
+                      strokeWidth={0}
+                      legendType="none"
+                      connectNulls={false}
                     />
                   ) : null
                 )}
-              </LineChart>
+              </ComposedChart>
             </ResponsiveContainer>
           )}
         </div>
@@ -228,9 +265,6 @@ export default function Europe() {
                     <span>vs Bund: <b style={{ color: spreadVsBund > 150 ? '#c0392b' : spreadVsBund > 75 ? '#e67e22' : '#27ae60' }}>+{spreadVsBund} bps</b></span>
                   )}
                   {spreadVsECB !== null && (
-                    <span>vs ECB AAA: <b>+{spreadVsECB} bps</b></span>
-                  )}
-                  {id === 'DE' && spreadVsECB !== null && (
                     <span>vs ECB AAA: <b>{spreadVsECB > 0 ? '+' : ''}{spreadVsECB} bps</b></span>
                   )}
                 </div>
