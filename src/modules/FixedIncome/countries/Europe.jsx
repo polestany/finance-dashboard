@@ -235,33 +235,6 @@ export default function Europe() {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: '1.25rem' }}>
-        <button
-          type="button"
-          onClick={() => setViewMode('cards')}
-          style={{
-            padding: '8px 14px', borderRadius: 18, border: '1px solid #ddd',
-            background: viewMode === 'cards' ? '#1a1a1a' : '#fff',
-            color: viewMode === 'cards' ? '#fff' : '#666',
-            cursor: 'pointer', fontSize: 13,
-          }}
-        >
-          Cards
-        </button>
-        <button
-          type="button"
-          onClick={() => setViewMode('table')}
-          style={{
-            padding: '8px 14px', borderRadius: 18, border: '1px solid #ddd',
-            background: viewMode === 'table' ? '#1a1a1a' : '#fff',
-            color: viewMode === 'table' ? '#fff' : '#666',
-            cursor: 'pointer', fontSize: 13,
-          }}
-        >
-          Table
-        </button>
-      </div>
-
       {/* Chart */}
       <div className="section">
         <div className="section-label">ECB AAA yield curve · country 10Y benchmarks</div>
@@ -308,6 +281,23 @@ export default function Europe() {
         <div style={{ fontSize: 11, color: '#ccc', marginTop: 8, lineHeight: 1.5 }}>
           Dashed line: ECB AAA composite curve (daily). Dots: country 10Y yields (OECD monthly via FRED). Dots above the curve reflect sovereign risk premium.
         </div>
+      </div>
+
+      <div className="toggle-group" style={{ marginBottom: '1.5rem' }}>
+        <button
+          type="button"
+          className={`toggle-btn ${viewMode === 'cards' ? 'active' : ''}`}
+          onClick={() => setViewMode('cards')}
+        >
+          Cards
+        </button>
+        <button
+          type="button"
+          className={`toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
+          onClick={() => setViewMode('table')}
+        >
+          Table
+        </button>
       </div>
 
       {viewMode === 'cards' ? (
