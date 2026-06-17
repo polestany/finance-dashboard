@@ -350,7 +350,7 @@ const getSortIcon = (key) => {
     <div className="section" style={{ marginTop: '2rem' }}>
       <div className="section-label">Tabla Comparativa Ordenable</div>
       <div style={{ background: '#ffffff', borderRadius: 8, border: '1px solid #ebebeb', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: collapse = 'collapse', textAlign: 'left', fontSize: 13 }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
           <thead>
             <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #ebebeb' }}>
               <th style={{ padding: '12px 16px', fontWeight: 600, color: '#666' }}>País</th>
