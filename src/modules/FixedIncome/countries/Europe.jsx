@@ -134,6 +134,60 @@ export default function Europe() {
 
   const toggle = (id) => setActive(prev => ({ ...prev, [id]: !prev[id] }));
   const ecb10Y = ecbCurve.find(d => d.label === '10Y')?.value;
+  // --- NUEVA LÓGICA PARA LA TABLA ORDENABLE ---
+const [sortConfig, setSortConfig] = useState({ key: 'yield10y', direction: 'desc' });
+
+const handleSort = (key) => {
+  let direction = 'asc';
+  if (sortConfig.key === key && sortConfig.direction === 'asc') {
+    direction = 'desc';
+  }
+  setSortConfig({ key, direction });
+};
+
+const ratingScale = {
+  'AAA': 1, 'AA-': 2, 'A': 3, 'A-': 4, 'BBB': 5, 'BBB-': 6
+};
+
+// Preparamos la lista de países extrayendo los datos en tiempo real de tu propio progreso
+const countriesList = Object.keys(LABELS).map(id => {
+  const val = tenYear[id];
+  // Calculamos la prima de riesgo (spread vs Alemania) igual que en tus tarjetas
+  const riskPremium = val != null && tenYear['DE'] != null && id !== 'DE'
+    ? Math.round((val - tenYear['DE']) * 100) : (id === 'DE' ? 0 : null);
+
+  return {
+    id,
+    name: LABELS[id],
+    yield10y: val,
+    riskPremium: riskPremium,
+    rating: COUNTRY_INFO[id].rating
+  };
+});
+
+// Ordenamos los países según la columna elegida
+const sortedCountries = [...countriesList].sort((a, b) => {
+  let aValue = a[sortConfig.key];
+  let bValue = b[sortConfig.key];
+
+  if (sortConfig.key === 'rating') {
+    aValue = ratingScale[a.rating] || 99;
+    bValue = ratingScale[b.rating] || 99;
+  }
+
+  if (aValue == null) return 1;
+  if (bValue == null) return -1;
+
+  if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+  if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+  return 0;
+});
+
+const getSortIcon = (key) => {
+  if (sortConfig.key !== key) return '↕';
+  return sortConfig.direction === 'asc' ? '▲' : '▼';
+};
+// --- FIN DE LA NUEVA LÓGICA ---
 
   // Inject country 10Y values into the 10Y data point
   const chartData = ecbCurve.map(point => {
@@ -292,6 +346,48 @@ export default function Europe() {
           })}
         </div>
       </div>
+      {/* --- NUEVA SECCIÓN: LISTA COMPARATIVA ORDENABLE --- */}
+    <div className="section" style={{ marginTop: '2rem' }}>
+      <div className="section-label">Tabla Comparativa Ordenable</div>
+      <div style={{ background: '#ffffff', borderRadius: 8, border: '1px solid #ebebeb', overflow: 'hidden' }}>
+        <table style={{ width: '100%', borderCollapse: collapse = 'collapse', textAlign: 'left', fontSize: 13 }}>
+          <thead>
+            <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #ebebeb' }}>
+              <th style={{ padding: '12px 16px', fontWeight: 600, color: '#666' }}>País</th>
+              <th onClick={() => handleSort('yield10y')} style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer', userSelect: 'none', color: sortConfig.key === 'yield10y' ? COLORS.FR : '#666' }}>
+                10Y Yield {getSortIcon('yield10y')}
+              </th>
+              <th onClick={() => handleSort('riskPremium')} style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer', userSelect: 'none', color: sortConfig.key === 'riskPremium' ? COLORS.FR : '#666' }}>
+                Prima de Riesgo (vs Bund) {getSortIcon('riskPremium')}
+              </th>
+              <th onClick={() => handleSort('rating')} style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer', userSelect: 'none', color: sortConfig.key === 'rating' ? COLORS.FR : '#666' }}>
+                Rating {getSortIcon('rating')}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedCountries.map((country) => (
+              <tr key={country.id} style={{ borderBottom: '1px solid #f5f5f5', opacity: active[country.id] ? 1 : 0.3, transition: 'opacity 0.2s' }}>
+                <td style={{ padding: '12px 16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS[country.id] }} />
+                  {country.name}
+                </td>
+                <td style={{ padding: '12px 16px', fontWeight: 600 }}>
+                  {country.yield10y ? country.yield10y.toFixed(2) + '%' : '—'}
+                </td>
+                <td style={{ padding: '12px 16px' }}>
+                  {country.riskPremium !== null ? (country.id === 'DE' ? 'Base (0 pbs)' : `+${country.riskPremium} pbs`) : '—'}
+                </td>
+                <td style={{ padding: '12px 16px', fontWeight: 600, color: country.rating.startsWith('AAA') || country.rating.startsWith('AA') ? '#27ae60' : '#e67e22' }}>
+                  {country.rating}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {/* --- FIN DE LA TABLA --- */}
     </>
   );
 }
