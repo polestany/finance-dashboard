@@ -197,14 +197,3 @@
 .toggle-btn:hover:not(.active) {
   color: #555;
 }
-
-/* Policy note */
-.policy-note {
-  background: #ffffff;
-  border: 1px solid #ebebeb;
-  border-radius: 8px;
-  padding: 1.25rem;
-  font-size: 13px;
-  color: #555;
-  line-height: 1.7;
-}

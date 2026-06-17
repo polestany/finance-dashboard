@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip as ChartTooltip } from 'recharts';
 import Europe from './countries/Europe';
+import Spain from './countries/Spain';
 import './FixedIncome.css';
 
 const US_SERIES = [
@@ -230,10 +231,18 @@ function USView() {
 const COUNTRIES = [
   { id: 'US', label: 'United States' },
   { id: 'EU', label: 'Europe' },
+  { id: 'ES', label: 'Spain' },
 ];
+
+const COUNTRY_VIEWS = {
+  US: USView,
+  EU: Europe,
+  ES: Spain,
+};
 
 export default function FixedIncome() {
   const [country, setCountry] = useState('EU');
+  const CountryView = COUNTRY_VIEWS[country] || Europe;
 
   return (
     <div className="module">
@@ -253,7 +262,7 @@ export default function FixedIncome() {
           ))}
         </div>
       </div>
-      {country === 'US' ? <USView /> : <Europe />}
+      <CountryView />
     </div>
   );
 }
