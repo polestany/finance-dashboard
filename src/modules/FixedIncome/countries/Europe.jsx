@@ -41,6 +41,7 @@ const FALLBACK_CURVE = [
 ];
 
 const FALLBACK_10Y = { DE: 3.05, FR: 3.74, IT: 3.82, ES: 3.54, PT: 3.42, GR: 3.75 };
+const COUNTRY_MARKER_SPACING = 24;
 
 async function fetchECBCurve() {
   const results = await Promise.all(
@@ -62,15 +63,30 @@ async function fetchFRED(id) {
 }
 
 const CustomDot = (props) => {
-  const { cx, cy, payload, country, color } = props;
+  const { cx, cy, payload, country, color, markerLayout } = props;
   if (!payload || payload[country] == null) return null;
+
+  const layout = markerLayout?.[country] || { offsetX: 0, labelOffsetX: 12, textAnchor: 'start' };
+  const dotX = cx + layout.offsetX;
+
   return (
     <g>
-      <circle cx={cx} cy={cy} r={7} fill={color} stroke="#fff" strokeWidth={2} />
+      {layout.offsetX !== 0 && (
+        <line
+          x1={cx}
+          y1={cy}
+          x2={dotX}
+          y2={cy}
+          stroke={color}
+          strokeOpacity={0.25}
+          strokeWidth={1}
+        />
+      )}
+      <circle cx={dotX} cy={cy} r={7} fill={color} stroke="#fff" strokeWidth={2} />
       <text
-        x={cx + 12}
+        x={dotX + layout.labelOffsetX}
         y={cy}
-        textAnchor="start"
+        textAnchor={layout.textAnchor}
         dominantBaseline="middle"
         fontSize={11}
         fill={color}
@@ -100,7 +116,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-export default function Europe() {
+export default function Europe({ onSelectSpain }) {
   const [ecbCurve, setEcbCurve] = useState([]);
   const [tenYear, setTenYear] = useState({});
   const [date, setDate] = useState('');
@@ -194,6 +210,22 @@ export default function Europe() {
     return sortConfig.direction === 'asc' ? '▲' : '▼';
   };
 
+  const activeBenchmarkCountries = Object.keys(LABELS)
+    .filter(country => active[country] && tenYear[country] != null)
+    .sort((a, b) => tenYear[a] - tenYear[b]);
+
+  const markerLayout = activeBenchmarkCountries.reduce((layout, country, index) => {
+    const offsetX = (index - (activeBenchmarkCountries.length - 1) / 2) * COUNTRY_MARKER_SPACING;
+    return {
+      ...layout,
+      [country]: {
+        offsetX,
+        labelOffsetX: offsetX < 0 ? -12 : 12,
+        textAnchor: offsetX < 0 ? 'end' : 'start',
+      },
+    };
+  }, {});
+
   // Inject country 10Y values into the 10Y data point
   const chartData = ecbCurve.map(point => {
     if (point.label === '10Y') {
@@ -249,7 +281,7 @@ export default function Europe() {
         <div className="chart-container">
           {!loading && (
             <ResponsiveContainer width="100%" height={340}>
-              <ComposedChart data={chartData} margin={{ top: 24, right: 50, left: 0, bottom: 0 }}>
+              <ComposedChart data={chartData} margin={{ top: 24, right: 76, left: 20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#888' }} />
                 <YAxis
@@ -274,7 +306,7 @@ export default function Europe() {
                       key={country}
                       dataKey={country}
                       stroke={COLORS[country]}
-                      dot={(props) => <CustomDot {...props} country={country} color={COLORS[country]} />}
+                      dot={(props) => <CustomDot {...props} country={country} color={COLORS[country]} markerLayout={markerLayout} />}
                       activeDot={false}
                       strokeWidth={0}
                       legendType="none"
@@ -323,12 +355,22 @@ export default function Europe() {
               const info = COUNTRY_INFO[id];
               const ratingColor = info.rating.startsWith('AA') ? '#27ae60' : info.rating.startsWith('A') ? '#27ae60' : '#e67e22';
 
+              const isSpain = id === 'ES';
+
               return (
-                <div
+                <button
                   key={id}
-                  className="spread-card"
-                  style={{ opacity: active[id] ? 1 : 0.3, transition: 'opacity 0.2s' }}
+                  type="button"
+                  className={`spread-card country-card ${isSpain ? 'country-card-clickable' : 'country-card-disabled'}`}
+                  onClick={isSpain ? onSelectSpain : undefined}
+                  aria-label={isSpain ? 'Open Spain fixed income dashboard' : `${LABELS[id]} dashboard coming soon`}
+                  style={{ opacity: active[id] ? 1 : 0.3 }}
                 >
+                  {!isSpain && (
+                    <span className="country-card-overlay">
+                      Coming soon
+                    </span>
+                  )}
                   <div className="spread-name" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS[id], display: 'inline-block' }} />
                     {LABELS[id]}
@@ -365,7 +407,7 @@ export default function Europe() {
                       <div style={{ fontSize: 11, color: '#aaa' }}>FRED · monthly</div>
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>

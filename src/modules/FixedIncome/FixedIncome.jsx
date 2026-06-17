@@ -231,18 +231,16 @@ function USView() {
 const COUNTRIES = [
   { id: 'US', label: 'United States' },
   { id: 'EU', label: 'Europe' },
-  { id: 'ES', label: 'Spain' },
 ];
-
-const COUNTRY_VIEWS = {
-  US: USView,
-  EU: Europe,
-  ES: Spain,
-};
 
 export default function FixedIncome() {
   const [country, setCountry] = useState('EU');
-  const CountryView = COUNTRY_VIEWS[country] || Europe;
+
+  const renderCountryView = () => {
+    if (country === 'US') return <USView />;
+    if (country === 'ES') return <Spain />;
+    return <Europe onSelectSpain={() => setCountry('ES')} />;
+  };
 
   return (
     <div className="module">
@@ -254,7 +252,7 @@ export default function FixedIncome() {
           {COUNTRIES.map(c => (
             <button
               key={c.id}
-              className={`toggle-btn ${country === c.id ? 'active' : ''}`}
+              className={`toggle-btn ${country === c.id || (country === 'ES' && c.id === 'EU') ? 'active' : ''}`}
               onClick={() => setCountry(c.id)}
             >
               {c.label}
@@ -262,7 +260,7 @@ export default function FixedIncome() {
           ))}
         </div>
       </div>
-      <CountryView />
+      {renderCountryView()}
     </div>
   );
 }
