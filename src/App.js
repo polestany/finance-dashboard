@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import FixedIncome from './modules/FixedIncome/FixedIncome';
+import Macro from './modules/Macro/Macro';
 import './App.css';
 
 const NAV_ITEMS = [
   { id: 'fixed-income', label: 'Fixed Income' },
   { id: 'equities', label: 'Equities', badge: 'soon' },
-  { id: 'macro', label: 'Macro', badge: 'soon' },
+  { id: 'macro', label: 'Macro' },
   { id: 'prediction-markets', label: 'Prediction Markets', badge: 'soon' },
 ];
 
@@ -43,7 +44,6 @@ function Sidebar({ activeView, onSelectView }) {
             onClick={() => onSelectView('macro')}
           >
             Macro
-            <span className="nav-badge">soon</span>
           </button>
           <button
             type="button"
@@ -68,6 +68,10 @@ function App() {
   const renderMainContent = () => {
     if (activeView === 'fixed-income') {
       return <FixedIncome />;
+    }
+
+    if (activeView === 'macro') {
+      return <Macro />;
     }
 
     const item = NAV_ITEMS.find(navItem => navItem.id === activeView);

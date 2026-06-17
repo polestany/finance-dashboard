@@ -1,0 +1,151 @@
+.macro-module {
+  max-width: 1040px;
+}
+
+.macro-status-grid {
+  margin-bottom: 1.5rem;
+}
+
+.macro-model-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.macro-model-card {
+  background: #ffffff;
+  border: 1px solid #ebebeb;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.macro-model-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.macro-model-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.macro-model-name {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.macro-chart {
+  position: relative;
+  height: 210px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #fcfcfb;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.macro-chart-grid {
+  position: absolute;
+  inset: 18px 18px 34px 44px;
+  background-image:
+    linear-gradient(#eeeeec 1px, transparent 1px),
+    linear-gradient(90deg, #eeeeec 1px, transparent 1px);
+  background-size: 100% 25%, 25% 100%;
+  border-left: 1px solid #dcdcdc;
+  border-bottom: 1px solid #dcdcdc;
+}
+
+.macro-axis {
+  position: absolute;
+  font-size: 10px;
+  font-weight: 600;
+  color: #bbb;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.macro-axis-y {
+  top: 50%;
+  left: 10px;
+  transform: translateY(-50%) rotate(-90deg);
+  transform-origin: center;
+}
+
+.macro-axis-x {
+  right: 18px;
+  bottom: 10px;
+}
+
+.macro-chart-empty {
+  position: absolute;
+  inset: 18px 18px 34px 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 12px;
+}
+
+.macro-chart-empty span {
+  background: rgba(255,255,255,0.8);
+  border: 1px solid #f0f0f0;
+  border-radius: 4px;
+  padding: 5px 8px;
+}
+
+.macro-model-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.macro-field-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.macro-field-value {
+  font-size: 13px;
+  color: #555;
+  line-height: 1.5;
+}
+
+.macro-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.macro-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  border-radius: 4px;
+  background: #f5f5f5;
+  color: #777;
+  font-size: 11px;
+  padding: 3px 7px;
+}
+
+.macro-source {
+  border-top: 1px solid #f5f5f5;
+  padding-top: 10px;
+  font-size: 11px;
+  color: #aaa;
+}
+
+@media (max-width: 900px) {
+  .macro-model-grid {
+    grid-template-columns: 1fr;
+  }
+}
