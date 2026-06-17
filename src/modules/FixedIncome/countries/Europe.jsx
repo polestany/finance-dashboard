@@ -67,7 +67,15 @@ const CustomDot = (props) => {
   return (
     <g>
       <circle cx={cx} cy={cy} r={7} fill={color} stroke="#fff" strokeWidth={2} />
-      <text x={cx} y={cy - 12} textAnchor="middle" fontSize={11} fill={color} fontWeight={600}>
+      <text
+        x={cx + 12}
+        y={cy}
+        textAnchor="start"
+        dominantBaseline="middle"
+        fontSize={11}
+        fill={color}
+        fontWeight={600}
+      >
         {country} {payload[country]?.toFixed(2)}%
       </text>
     </g>
@@ -283,7 +291,8 @@ export default function Europe() {
         </div>
       </div>
 
-      <div className="toggle-group" style={{ marginBottom: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', margin: '1rem 0 1.5rem' }}>
+        <div className="toggle-group">
         <button
           type="button"
           className={`toggle-btn ${viewMode === 'cards' ? 'active' : ''}`}
@@ -296,8 +305,9 @@ export default function Europe() {
           className={`toggle-btn ${viewMode === 'table' ? 'active' : ''}`}
           onClick={() => setViewMode('table')}
         >
-          Table
+          List
         </button>
+        </div>
       </div>
 
       {viewMode === 'cards' ? (
@@ -362,7 +372,7 @@ export default function Europe() {
         </div>
       ) : (
         <div className="section" style={{ marginTop: '2rem' }}>
-          <div className="section-label">Sortable Comparison Table</div>
+          <div className="section-label">Sortable Comparison List</div>
           <div style={{ background: '#ffffff', borderRadius: 8, border: '1px solid #ebebeb', overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
               <thead>
