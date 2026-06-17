@@ -244,6 +244,17 @@ export default function FixedIncome() {
 
   return (
     <div className="module">
+      {country === 'ES' && (
+        <button
+          type="button"
+          className="drilldown-back"
+          onClick={() => setCountry('EU')}
+          aria-label="Back to Europe"
+        >
+          <span aria-hidden="true">←</span>
+          Europe
+        </button>
+      )}
       <div className="module-header">
         <div>
           <h1 className="module-title">Fixed Income</h1>

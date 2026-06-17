@@ -41,7 +41,8 @@ const FALLBACK_CURVE = [
 ];
 
 const FALLBACK_10Y = { DE: 3.05, FR: 3.74, IT: 3.82, ES: 3.54, PT: 3.42, GR: 3.75 };
-const COUNTRY_MARKER_SPACING = 24;
+const COUNTRY_MARKER_X_SPACING = 28;
+const COUNTRY_MARKER_Y_SPACING = 18;
 
 async function fetchECBCurve() {
   const results = await Promise.all(
@@ -66,26 +67,28 @@ const CustomDot = (props) => {
   const { cx, cy, payload, country, color, markerLayout } = props;
   if (!payload || payload[country] == null) return null;
 
-  const layout = markerLayout?.[country] || { offsetX: 0, labelOffsetX: 12, textAnchor: 'start' };
+  const layout = markerLayout?.[country] || { offsetX: 0, offsetY: 0, labelOffsetX: 12, textAnchor: 'start' };
   const dotX = cx + layout.offsetX;
+  const dotY = cy + layout.offsetY;
 
   return (
     <g>
-      {layout.offsetX !== 0 && (
+      {(layout.offsetX !== 0 || layout.offsetY !== 0) && (
         <line
           x1={cx}
           y1={cy}
           x2={dotX}
-          y2={cy}
+          y2={dotY}
           stroke={color}
-          strokeOpacity={0.25}
+          strokeOpacity={0.32}
           strokeWidth={1}
         />
       )}
-      <circle cx={dotX} cy={cy} r={7} fill={color} stroke="#fff" strokeWidth={2} />
+      <circle cx={cx} cy={cy} r={3} fill={color} fillOpacity={0.45} />
+      <circle cx={dotX} cy={dotY} r={7} fill={color} stroke="#fff" strokeWidth={2} />
       <text
         x={dotX + layout.labelOffsetX}
-        y={cy}
+        y={dotY}
         textAnchor={layout.textAnchor}
         dominantBaseline="middle"
         fontSize={11}
@@ -215,11 +218,14 @@ export default function Europe({ onSelectSpain }) {
     .sort((a, b) => tenYear[a] - tenYear[b]);
 
   const markerLayout = activeBenchmarkCountries.reduce((layout, country, index) => {
-    const offsetX = (index - (activeBenchmarkCountries.length - 1) / 2) * COUNTRY_MARKER_SPACING;
+    const midpoint = (activeBenchmarkCountries.length - 1) / 2;
+    const offsetX = (index - midpoint) * COUNTRY_MARKER_X_SPACING;
+    const offsetY = (midpoint - index) * COUNTRY_MARKER_Y_SPACING;
     return {
       ...layout,
       [country]: {
         offsetX,
+        offsetY,
         labelOffsetX: offsetX < 0 ? -12 : 12,
         textAnchor: offsetX < 0 ? 'end' : 'start',
       },
@@ -281,7 +287,7 @@ export default function Europe({ onSelectSpain }) {
         <div className="chart-container">
           {!loading && (
             <ResponsiveContainer width="100%" height={340}>
-              <ComposedChart data={chartData} margin={{ top: 24, right: 76, left: 20, bottom: 0 }}>
+              <ComposedChart data={chartData} margin={{ top: 54, right: 92, left: 36, bottom: 28 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#888' }} />
                 <YAxis
