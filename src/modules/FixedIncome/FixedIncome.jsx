@@ -233,7 +233,7 @@ const COUNTRIES = [
 ];
 
 export default function FixedIncome() {
-  const [country, setCountry] = useState('ES');
+  const [country, setCountry] = useState('EU');
 
   return (
     <div className="module">
