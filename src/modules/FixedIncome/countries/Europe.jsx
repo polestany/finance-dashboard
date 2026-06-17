@@ -98,6 +98,7 @@ export default function Europe() {
   const [date, setDate] = useState('');
   const [loading, setLoading] = useState(true);
   const [usingFallback, setUsingFallback] = useState(false);
+  const [viewMode, setViewMode] = useState('cards');
   const [active, setActive] = useState(
     Object.keys(LABELS).reduce((a, k) => ({ ...a, [k]: true }), {})
   );
@@ -134,60 +135,56 @@ export default function Europe() {
 
   const toggle = (id) => setActive(prev => ({ ...prev, [id]: !prev[id] }));
   const ecb10Y = ecbCurve.find(d => d.label === '10Y')?.value;
-  // --- NUEVA LÓGICA PARA LA TABLA ORDENABLE ---
-const [sortConfig, setSortConfig] = useState({ key: 'yield10y', direction: 'desc' });
 
-const handleSort = (key) => {
-  let direction = 'asc';
-  if (sortConfig.key === key && sortConfig.direction === 'asc') {
-    direction = 'desc';
-  }
-  setSortConfig({ key, direction });
-};
+  const [sortConfig, setSortConfig] = useState({ key: 'yield10y', direction: 'desc' });
 
-const ratingScale = {
-  'AAA': 1, 'AA-': 2, 'A': 3, 'A-': 4, 'BBB': 5, 'BBB-': 6
-};
-
-// Preparamos la lista de países extrayendo los datos en tiempo real de tu propio progreso
-const countriesList = Object.keys(LABELS).map(id => {
-  const val = tenYear[id];
-  // Calculamos la prima de riesgo (spread vs Alemania) igual que en tus tarjetas
-  const riskPremium = val != null && tenYear['DE'] != null && id !== 'DE'
-    ? Math.round((val - tenYear['DE']) * 100) : (id === 'DE' ? 0 : null);
-
-  return {
-    id,
-    name: LABELS[id],
-    yield10y: val,
-    riskPremium: riskPremium,
-    rating: COUNTRY_INFO[id].rating
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
   };
-});
 
-// Ordenamos los países según la columna elegida
-const sortedCountries = [...countriesList].sort((a, b) => {
-  let aValue = a[sortConfig.key];
-  let bValue = b[sortConfig.key];
+  const ratingScale = {
+    AAA: 1, 'AA-': 2, A: 3, 'A-': 4, BBB: 5, 'BBB-': 6,
+  };
 
-  if (sortConfig.key === 'rating') {
-    aValue = ratingScale[a.rating] || 99;
-    bValue = ratingScale[b.rating] || 99;
-  }
+  const countriesList = Object.keys(LABELS).map(id => {
+    const val = tenYear[id];
+    const riskPremium = val != null && tenYear.DE != null && id !== 'DE'
+      ? Math.round((val - tenYear.DE) * 100) : (id === 'DE' ? 0 : null);
 
-  if (aValue == null) return 1;
-  if (bValue == null) return -1;
+    return {
+      id,
+      name: LABELS[id],
+      yield10y: val,
+      riskPremium,
+      rating: COUNTRY_INFO[id].rating,
+    };
+  });
 
-  if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-  if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-  return 0;
-});
+  const sortedCountries = [...countriesList].sort((a, b) => {
+    let aValue = a[sortConfig.key];
+    let bValue = b[sortConfig.key];
 
-const getSortIcon = (key) => {
-  if (sortConfig.key !== key) return '↕';
-  return sortConfig.direction === 'asc' ? '▲' : '▼';
-};
-// --- FIN DE LA NUEVA LÓGICA ---
+    if (sortConfig.key === 'rating') {
+      aValue = ratingScale[a.rating] || 99;
+      bValue = ratingScale[b.rating] || 99;
+    }
+
+    if (aValue == null) return 1;
+    if (bValue == null) return -1;
+
+    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return '↕';
+    return sortConfig.direction === 'asc' ? '▲' : '▼';
+  };
 
   // Inject country 10Y values into the 10Y data point
   const chartData = ecbCurve.map(point => {
@@ -238,6 +235,33 @@ const getSortIcon = (key) => {
         ))}
       </div>
 
+      <div style={{ display: 'flex', gap: 8, marginBottom: '1.25rem' }}>
+        <button
+          type="button"
+          onClick={() => setViewMode('cards')}
+          style={{
+            padding: '8px 14px', borderRadius: 18, border: '1px solid #ddd',
+            background: viewMode === 'cards' ? '#1a1a1a' : '#fff',
+            color: viewMode === 'cards' ? '#fff' : '#666',
+            cursor: 'pointer', fontSize: 13,
+          }}
+        >
+          Cards
+        </button>
+        <button
+          type="button"
+          onClick={() => setViewMode('table')}
+          style={{
+            padding: '8px 14px', borderRadius: 18, border: '1px solid #ddd',
+            background: viewMode === 'table' ? '#1a1a1a' : '#fff',
+            color: viewMode === 'table' ? '#fff' : '#666',
+            cursor: 'pointer', fontSize: 13,
+          }}
+        >
+          Table
+        </button>
+      </div>
+
       {/* Chart */}
       <div className="section">
         <div className="section-label">ECB AAA yield curve · country 10Y benchmarks</div>
@@ -286,108 +310,108 @@ const getSortIcon = (key) => {
         </div>
       </div>
 
-      {/* Country cards */}
-      <div className="section">
-        <div className="section-label">Country snapshot · 10Y yields & spreads</div>
-        <div className="spreads-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-          {Object.keys(LABELS).map(id => {
-            const val = tenYear[id];
-            const spreadVsBund = val != null && tenYear['DE'] != null && id !== 'DE'
-              ? Math.round((val - tenYear['DE']) * 100) : null;
-            const spreadVsECB = val != null && ecb10Y != null
-              ? Math.round((val - ecb10Y) * 100) : null;
-            const info = COUNTRY_INFO[id];
-            const ratingColor = info.rating.startsWith('AA') ? '#27ae60' : info.rating.startsWith('A') ? '#27ae60' : '#e67e22';
+      {viewMode === 'cards' ? (
+        <div className="section">
+          <div className="section-label">Country snapshot · 10Y yields & spreads</div>
+          <div className="spreads-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+            {Object.keys(LABELS).map(id => {
+              const val = tenYear[id];
+              const spreadVsBund = val != null && tenYear.DE != null && id !== 'DE'
+                ? Math.round((val - tenYear.DE) * 100) : null;
+              const spreadVsECB = val != null && ecb10Y != null
+                ? Math.round((val - ecb10Y) * 100) : null;
+              const info = COUNTRY_INFO[id];
+              const ratingColor = info.rating.startsWith('AA') ? '#27ae60' : info.rating.startsWith('A') ? '#27ae60' : '#e67e22';
 
-            return (
-              <div
-                key={id}
-                className="spread-card"
-                style={{ opacity: active[id] ? 1 : 0.3, transition: 'opacity 0.2s' }}
-              >
-                <div className="spread-name" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS[id], display: 'inline-block' }} />
-                  {LABELS[id]}
-                </div>
-                <div className="spread-value" style={{ color: COLORS[id] }}>
-                  {val ? val.toFixed(2) + '%' : '—'}
-                  <span style={{ fontSize: 11, color: '#bbb', fontWeight: 400, marginLeft: 6 }}>10Y</span>
-                </div>
+              return (
+                <div
+                  key={id}
+                  className="spread-card"
+                  style={{ opacity: active[id] ? 1 : 0.3, transition: 'opacity 0.2s' }}
+                >
+                  <div className="spread-name" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS[id], display: 'inline-block' }} />
+                    {LABELS[id]}
+                  </div>
+                  <div className="spread-value" style={{ color: COLORS[id] }}>
+                    {val ? val.toFixed(2) + '%' : '—'}
+                    <span style={{ fontSize: 11, color: '#bbb', fontWeight: 400, marginLeft: 6 }}>10Y</span>
+                  </div>
 
-                <div style={{ marginTop: 8, fontSize: 12, color: '#888', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                  {spreadVsBund !== null && (
-                    <span>vs Bund: <b style={{ color: spreadVsBund > 150 ? '#c0392b' : spreadVsBund > 75 ? '#e67e22' : '#27ae60' }}>+{spreadVsBund} bps</b></span>
-                  )}
-                  {spreadVsECB !== null && (
-                    <span>vs ECB AAA: <b>{spreadVsECB > 0 ? '+' : ''}{spreadVsECB} bps</b></span>
-                  )}
-                </div>
+                  <div style={{ marginTop: 8, fontSize: 12, color: '#888', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {spreadVsBund !== null && (
+                      <span>vs Bund: <b style={{ color: spreadVsBund > 150 ? '#c0392b' : spreadVsBund > 75 ? '#e67e22' : '#27ae60' }}>+{spreadVsBund} bps</b></span>
+                    )}
+                    {spreadVsECB !== null && (
+                      <span>vs ECB AAA: <b>{spreadVsECB > 0 ? '+' : ''}{spreadVsECB} bps</b></span>
+                    )}
+                  </div>
 
-                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #f5f5f5', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                  <div>
-                    <div style={{ fontSize: 10, color: '#ccc' }}>Rating</div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: ratingColor }}>{info.rating}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 10, color: '#ccc' }}>Outlook</div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{info.outlook}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 10, color: '#ccc' }}>Debt/GDP</div>
-                    <div style={{ fontSize: 13, fontWeight: 600 }}>{info.debt}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: 10, color: '#ccc' }}>Source</div>
-                    <div style={{ fontSize: 11, color: '#aaa' }}>FRED · monthly</div>
+                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #f5f5f5', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                    <div>
+                      <div style={{ fontSize: 10, color: '#ccc' }}>Rating</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: ratingColor }}>{info.rating}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: '#ccc' }}>Outlook</div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{info.outlook}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: '#ccc' }}>Debt/GDP</div>
+                      <div style={{ fontSize: 13, fontWeight: 600 }}>{info.debt}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 10, color: '#ccc' }}>Source</div>
+                      <div style={{ fontSize: 11, color: '#aaa' }}>FRED · monthly</div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
-      {/* --- NUEVA SECCIÓN: LISTA COMPARATIVA ORDENABLE --- */}
-    <div className="section" style={{ marginTop: '2rem' }}>
-      <div className="section-label">Tabla Comparativa Ordenable</div>
-      <div style={{ background: '#ffffff', borderRadius: 8, border: '1px solid #ebebeb', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #ebebeb' }}>
-              <th style={{ padding: '12px 16px', fontWeight: 600, color: '#666' }}>País</th>
-              <th onClick={() => handleSort('yield10y')} style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer', userSelect: 'none', color: sortConfig.key === 'yield10y' ? COLORS.FR : '#666' }}>
-                10Y Yield {getSortIcon('yield10y')}
-              </th>
-              <th onClick={() => handleSort('riskPremium')} style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer', userSelect: 'none', color: sortConfig.key === 'riskPremium' ? COLORS.FR : '#666' }}>
-                Prima de Riesgo (vs Bund) {getSortIcon('riskPremium')}
-              </th>
-              <th onClick={() => handleSort('rating')} style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer', userSelect: 'none', color: sortConfig.key === 'rating' ? COLORS.FR : '#666' }}>
-                Rating {getSortIcon('rating')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedCountries.map((country) => (
-              <tr key={country.id} style={{ borderBottom: '1px solid #f5f5f5', opacity: active[country.id] ? 1 : 0.3, transition: 'opacity 0.2s' }}>
-                <td style={{ padding: '12px 16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS[country.id] }} />
-                  {country.name}
-                </td>
-                <td style={{ padding: '12px 16px', fontWeight: 600 }}>
-                  {country.yield10y ? country.yield10y.toFixed(2) + '%' : '—'}
-                </td>
-                <td style={{ padding: '12px 16px' }}>
-                  {country.riskPremium !== null ? (country.id === 'DE' ? 'Base (0 pbs)' : `+${country.riskPremium} pbs`) : '—'}
-                </td>
-                <td style={{ padding: '12px 16px', fontWeight: 600, color: country.rating.startsWith('AAA') || country.rating.startsWith('AA') ? '#27ae60' : '#e67e22' }}>
-                  {country.rating}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    {/* --- FIN DE LA TABLA --- */}
+      ) : (
+        <div className="section" style={{ marginTop: '2rem' }}>
+          <div className="section-label">Sortable Comparison Table</div>
+          <div style={{ background: '#ffffff', borderRadius: 8, border: '1px solid #ebebeb', overflow: 'hidden' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: '#f9f9f9', borderBottom: '1px solid #ebebeb' }}>
+                  <th style={{ padding: '12px 16px', fontWeight: 600, color: '#666' }}>Country</th>
+                  <th onClick={() => handleSort('yield10y')} style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer', userSelect: 'none', color: sortConfig.key === 'yield10y' ? COLORS.FR : '#666' }}>
+                    10Y Yield {getSortIcon('yield10y')}
+                  </th>
+                  <th onClick={() => handleSort('riskPremium')} style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer', userSelect: 'none', color: sortConfig.key === 'riskPremium' ? COLORS.FR : '#666' }}>
+                    Risk Premium (vs Bund) {getSortIcon('riskPremium')}
+                  </th>
+                  <th onClick={() => handleSort('rating')} style={{ padding: '12px 16px', fontWeight: 600, cursor: 'pointer', userSelect: 'none', color: sortConfig.key === 'rating' ? COLORS.FR : '#666' }}>
+                    Rating {getSortIcon('rating')}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedCountries.map((country) => (
+                  <tr key={country.id} style={{ borderBottom: '1px solid #f5f5f5', opacity: active[country.id] ? 1 : 0.3, transition: 'opacity 0.2s' }}>
+                    <td style={{ padding: '12px 16px', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: COLORS[country.id] }} />
+                      {country.name}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontWeight: 600 }}>
+                      {country.yield10y ? country.yield10y.toFixed(2) + '%' : '—'}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      {country.riskPremium !== null ? (country.id === 'DE' ? 'Base (0 bps)' : `+${country.riskPremium} bps`) : '—'}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontWeight: 600, color: country.rating.startsWith('AAA') || country.rating.startsWith('AA') ? '#27ae60' : '#e67e22' }}>
+                      {country.rating}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </>
   );
 }
