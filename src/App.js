@@ -18,38 +18,42 @@ function Sidebar({ activeView, onSelectView }) {
       </div>
       <nav className="sidebar-nav">
         <div className="nav-section-label">Markets</div>
-        <button
-          type="button"
-          className={`nav-item ${activeView === 'fixed-income' ? 'active' : ''}`}
-          onClick={() => onSelectView('fixed-income')}
-        >
-          Fixed Income
-        </button>
-        <button
-          type="button"
-          className={`nav-item ${activeView === 'equities' ? 'active' : ''}`}
-          onClick={() => onSelectView('equities')}
-        >
-          Equities
-          <span className="nav-badge">soon</span>
-        </button>
+        <div className="sidebar-toggle-group">
+          <button
+            type="button"
+            className={`sidebar-toggle-btn ${activeView === 'fixed-income' ? 'active' : ''}`}
+            onClick={() => onSelectView('fixed-income')}
+          >
+            Fixed Income
+          </button>
+          <button
+            type="button"
+            className={`sidebar-toggle-btn ${activeView === 'equities' ? 'active' : ''}`}
+            onClick={() => onSelectView('equities')}
+          >
+            Equities
+            <span className="nav-badge">soon</span>
+          </button>
+        </div>
         <div className="nav-section-label">Analysis</div>
-        <button
-          type="button"
-          className={`nav-item ${activeView === 'macro' ? 'active' : ''}`}
-          onClick={() => onSelectView('macro')}
-        >
-          Macro
-          <span className="nav-badge">soon</span>
-        </button>
-        <button
-          type="button"
-          className={`nav-item ${activeView === 'prediction-markets' ? 'active' : ''}`}
-          onClick={() => onSelectView('prediction-markets')}
-        >
-          Prediction Markets
-          <span className="nav-badge">soon</span>
-        </button>
+        <div className="sidebar-toggle-group">
+          <button
+            type="button"
+            className={`sidebar-toggle-btn ${activeView === 'macro' ? 'active' : ''}`}
+            onClick={() => onSelectView('macro')}
+          >
+            Macro
+            <span className="nav-badge">soon</span>
+          </button>
+          <button
+            type="button"
+            className={`sidebar-toggle-btn ${activeView === 'prediction-markets' ? 'active' : ''}`}
+            onClick={() => onSelectView('prediction-markets')}
+          >
+            Prediction Markets
+            <span className="nav-badge">soon</span>
+          </button>
+        </div>
       </nav>
       <div className="sidebar-footer">
         <span>FRED · World Bank · Kalshi</span>
